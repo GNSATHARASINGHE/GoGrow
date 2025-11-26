@@ -1,2 +1,2 @@
-# GoGrow
-Got it — here’s a **description under 350 characters**:  ---  **GoGrow is a digital platform designed to reduce post-harvest losses by connecting farmers and buyers directly. It provides real-time market data, improves coordination, and helps farmers sell their produce on time at optimized, fair prices.**
+# gogrow
+GoGrow is a smart web app that helps farmers post and sell their crops online. Users can register, upload harvest details with images, chat with buyers, and manage sales easily. The platform promotes direct farm-to-market trading and reduces wastage.
