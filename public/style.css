@@ -1,0 +1,161 @@
+/* Reset and base styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Arial', sans-serif;
+}
+
+body {
+  background-color: #1f3f32;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+/* Container for login/register/onboarding */
+.login-container {
+  background-color: #1f3f32;
+  width: 100%;
+  max-width: 400px;
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+  color: white;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+}
+
+/* Logo/Image */
+.login-image {
+  width: 100%;
+  max-width: 280px;
+  height: auto;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+/* Headings and text */
+h1 {
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+p {
+  font-size: 14px;
+  margin-top: 10px;
+}
+
+a {
+  color: #b9e17e;
+  text-decoration: none;
+}
+
+/* Form layout */
+form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+form input {
+  width: 90%;
+  max-width: 300px;
+  padding: 12px;
+  margin-bottom: 12px;
+  border: none;
+  border-bottom: 1px solid #ccc;
+  background: white;
+  color: black;
+  font-size: 16px;
+  border-radius: 6px;
+  transition: border 0.2s;
+}
+
+form input:focus {
+  border-color: #b9e17e;
+  outline: none;
+}
+
+/* Submit Button */
+form button {
+  width: 90%;
+  max-width: 300px;
+  padding: 12px;
+  margin-top: 10px;
+  background-color: #b9e17e;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 16px;
+  color: #1f3f32;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+form button:hover {
+  background-color: #a4d86b;
+}
+
+/* Slide Navigation Buttons */
+.slide-buttons {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.slide-buttons button {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.green-btn {
+  background-color: #b9e17e;
+  color: #1f3f32;
+}
+
+.grey-btn {
+  background-color: #444;
+  color: white;
+}
+
+/* Dots for onboarding */
+.dot-container {
+  margin: 10px 0;
+}
+
+.dot {
+  height: 10px;
+  width: 10px;
+  margin: 0 4px;
+  background-color: #888;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.dot.active {
+  background-color: #b9e17e;
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+  h1 {
+    font-size: 22px;
+  }
+
+  form input, form button {
+    font-size: 15px;
+  }
+
+  .slide-buttons button {
+    font-size: 14px;
+  }
+}

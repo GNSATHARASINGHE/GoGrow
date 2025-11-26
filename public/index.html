@@ -1,0 +1,162 @@
+<!DOCTYPE html> 
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Login - GoGrow</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      background-color: #1f3f32;
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .login-container {
+      background-color: #2b5445;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+      text-align: center;
+      width: 90%;
+      max-width: 400px;
+    }
+
+    .login-container h1 {
+      color: #fff;
+      margin-bottom: 20px;
+    }
+
+    .login-image {
+      width: 100%;
+      max-height: 180px;
+      object-fit: cover;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+
+    form input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    form button {
+      background-color: #b9e17e;
+      color: #1f3f32;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-weight: bold;
+      width: 100%;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    form button:hover {
+      background-color: #a2c65f;
+    }
+
+    p {
+      color: #fff;
+      font-size: 13px;
+      margin-top: 12px;
+    }
+
+    a {
+      color: #b9e17e;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <h1>GoGrow</h1>
+    <img src="veg.png" class="login-image" alt="Field">
+    <form onsubmit="loginUser(event)">
+      <!-- Updated input: Email or Username -->
+      <input type="text" placeholder="Email or Username" id="identifier" required>
+
+      <input type="password" placeholder="Password" id="password" required>
+      <button type="submit">Login</button>
+
+      <!-- Forgot Password Link -->
+      <div style="text-align: right; margin-bottom: 10px;">
+        <a href="forgot-password.html" style="font-size: 12px;">Forgot Password?</a>
+      </div>
+    </form>
+    <p>Don't have an account? <a href="register.html">Register</a></p>
+  </div>
+
+<script>
+  async function loginUser(e) {
+    e.preventDefault();
+
+    const identifier = document.getElementById('identifier').value;
+    const password = document.getElementById('password').value;
+
+    try {
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier, password })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || 'Login failed');
+        return;
+      }
+
+    // After successful login response
+localStorage.setItem('username', data.username);
+localStorage.setItem('role', data.role);
+
+
+// Redirect based on role
+if (data.role === 'admin') {
+  window.location.href = 'admin.html';
+} else if (data.role === 'buyer') {
+  window.location.href = 'onboarding.html';
+} else {
+  window.location.href = 'onboarding.html';
+}
+
+
+    } catch (err) {
+      alert('Login failed. Please try again.');
+      console.error(err);
+    }
+  }
+</script>
+<script>
+  // Prevent going back to this login page if already logged in
+  const role = localStorage.getItem('role');
+  if (role === 'admin') {
+    window.location.replace('admin.html');
+  } else if (role === 'buyer' || role === 'user') {
+    window.location.replace('onboarding.html');
+  }
+
+  // Optional: Prevent back button entirely while on login page
+  history.pushState(null, null, location.href);
+  window.onpopstate = function () {
+    history.pushState(null, null, location.href);
+  };
+</script>
+
+
+</body>
+</html>

@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cart • Go-Grow</title>
+  <style>
+    /* ---------- Theme tokens ---------- */
+    :root{
+      --bg:#f4f6f8;
+      --text:#333;
+      --container:#ffffff;
+      --card:#f9f9f9;
+      --heading:#2c3e50;
+      --muted:#999;
+      --border:#ccc;
+      --shadow:0 4px 12px rgba(0,0,0,0.1);
+
+      --btn-green:#4caf50;
+      --btn-red:#e76e6e;
+      --accent:#009688;
+    }
+    :root[data-theme="dark"]{
+      --bg:#0f1216;
+      --text:#e3e7ea;
+      --container:#161b20;
+      --card:#1e242b;
+      --heading:#d7dde4;
+      --muted:#9aa4af;
+      --border:#2a2f37;
+      --shadow:0 4px 14px rgba(0,0,0,0.6);
+
+      --btn-green:#4caf50; /* keep brand colors */
+      --btn-red:#e76e6e;
+      --accent:#2b5445;
+    }
+
+    *{ box-sizing:border-box; font-family:'Poppins', sans-serif;
+       transition: background-color .25s, color .25s, border-color .25s, box-shadow .25s; }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background-color: var(--container);
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: var(--shadow);
+    }
+    .header-bar {
+      position: relative; /* for the absolute toggle */
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    /* 🌙 icon-only toggle (top-right of header) */
+    .theme-toggle{
+      position:absolute;
+      top:0;
+      right:0;
+      transform: translate(0,-50%); /* nudges into the corner nicely */
+      width:38px; height:38px;
+      border:0; border-radius:50%;
+      display:grid; place-items:center;
+      font-size:20px; cursor:pointer;
+      background: var(--accent); color:#fff;
+      box-shadow: var(--shadow);
+      transition: transform .12s, opacity .2s, background-color .25s;
+    }
+    .theme-toggle:hover{ opacity:.92; }
+    .theme-toggle:active{ transform: translate(0,-50%) scale(.96); }
+
+    .user-info {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+    #headerUsername {
+      font-weight: bold;
+      font-size: 14px;
+      color: var(--accent);
+    }
+    h2 { margin: 0; font-size: 24px; color: var(--heading); }
+
+    .logout-btn, .message-btn {
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 14px;
+      cursor: pointer;
+      color: white;
+    }
+    .logout-btn { background-color: var(--btn-red); }
+    .message-btn { background-color: var(--btn-green); }
+
+    .cart-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px;
+      margin-bottom: 10px;
+      background: var(--card);
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+    .cart-info { flex: 1; min-width: 0; }
+    .cart-info h4 { margin: 0 0 4px; font-size: 16px; color: var(--heading); }
+    .cart-info p { margin: 2px 0; font-size: 14px; color: var(--text); }
+
+    .qty-controls { display: flex; align-items: center; gap: 6px; }
+    .qty-controls button {
+      border: none; background: var(--accent); color: white;
+      padding: 4px 8px; border-radius: 6px; cursor: pointer;
+    }
+    .qty-controls span { min-width: 22px; text-align: center; font-weight: 700; }
+
+    .line-total { min-width: 140px; text-align: right; }
+    .line-total div:first-child { font-size: 13px; color: var(--muted); }
+    .line-total div:last-child { font-weight: 700; }
+
+    .summary {
+      margin-top: 20px; padding: 15px;
+      background: rgba(0,153,136,.08);
+      border-radius: 12px; font-size: 16px;
+    }
+    :root[data-theme="dark"] .summary{ background: rgba(77,208,225,.12); }
+
+    .empty { text-align: center; margin: 30px 0; font-size: 16px; color: var(--muted); }
+
+    @media (max-width: 520px) {
+      .cart-item { flex-direction: column; align-items: stretch; }
+      .line-total { text-align: left; }
+      .theme-toggle{ top:-6px; right:-6px; transform:none; } /* keep visible on small screens */
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header-bar">
+      <h2>Go-Grow Cart</h2>
+
+      <!-- 🌙 theme toggle -->
+      <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">🌙</button>
+
+      <div class="user-info">
+        <div id="headerUsername">Welcome, user</div>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+        <button class="message-btn" onclick="continueShopping()">← Back to Posts</button>
+      </div>
+    </div>
+
+    <div id="cartContainer"></div>
+    <div id="cartSummary" class="summary" style="display:none;"></div>
+  </div>
+
+<script>
+  // --- Access guard: buyers only ---
+  const role = localStorage.getItem('role');
+  if (role !== 'buyer') { window.location.href = 'view-posts.html'; }
+
+  // --- Theme toggle ---
+  (function () {
+    const btn = document.getElementById('themeToggle');
+    const saved = localStorage.getItem('theme') ||
+                  (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    setTheme(saved);
+
+    btn.addEventListener('click', () => {
+      const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+      setTheme(next);
+    });
+
+    function setTheme(t){
+      document.documentElement.setAttribute('data-theme', t);
+      localStorage.setItem('theme', t);
+      btn.textContent = t === 'dark' ? '☀️' : '🌙';
+    }
+  })();
+
+  // --- Helpers ---
+  function getCart() {
+    try { return JSON.parse(localStorage.getItem('cart') || '[]'); }
+    catch { return []; }
+  }
+  function saveCart(cart) { localStorage.setItem('cart', JSON.stringify(cart)); }
+  function logout() { localStorage.clear(); sessionStorage.clear(); window.location.href = 'index.html'; }
+  function continueShopping() { window.location.href = 'view-posts.html'; }
+
+  // Parse "Rs 200/kg", "Rs. 1,200", 200, etc.
+  function parsePrice(p) {
+    if (typeof p === 'number') return p;
+    if (!p) return 0;
+    const n = String(p).replace(/[^\d.]/g, '');
+    return parseFloat(n || '0');
+  }
+  function Rs(n) {
+    return 'Rs. ' + Number(n || 0).toLocaleString(undefined, {
+      minimumFractionDigits: 2, maximumFractionDigits: 2
+    });
+  }
+  function clampQty(qty, maxAvailBlocks) {
+    qty = parseInt(qty || 1, 10);
+    if (isNaN(qty) || qty < 1) qty = 1;
+    if (Number.isFinite(maxAvailBlocks)) qty = Math.min(qty, maxAvailBlocks);
+    return qty;
+  }
+
+  // --- Render ---
+  function renderCart() {
+    const cart = getCart();
+    const container = document.getElementById('cartContainer');
+    const summaryBox = document.getElementById('cartSummary');
+    container.innerHTML = '';
+
+    if (!cart.length) {
+      summaryBox.style.display = 'none';
+      container.innerHTML = `<div class="empty">Your cart is empty.</div>`;
+      return;
+    }
+
+    let subtotal = 0;
+
+    cart.forEach((item, idx) => {
+      const unitPrice = parsePrice(item.price);
+      const availableAmt = (() => {
+        if (item.quantityAvailable == null) return 1;
+        const n = parseFloat(String(item.quantityAvailable).replace(/[^\d.]/g, ''));
+        return isNaN(n) ? 1 : n;
+      })();
+      const basePrice = unitPrice * availableAmt;
+      const qty = item.qty || 1;
+      const lineTotal = basePrice * qty;
+      subtotal += lineTotal;
+
+      const div = document.createElement('div');
+      div.className = 'cart-item';
+      div.innerHTML = `
+        <div class="cart-info">
+          <h4>${item.crop}</h4>
+          <p>Seller: ${item.seller}</p>
+          <p>Unit Price: <strong>${Rs(unitPrice)}</strong></p>
+          <p>Available: ${item.quantityAvailable ?? '—'}</p>
+          <p><em>Unit × Available:</em> <strong>${Rs(basePrice)}</strong></p>
+        </div>
+
+        <div class="qty-controls">
+          <button onclick="updateQty(${idx}, -1)">-</button>
+          <span>${qty}</span>
+          <button onclick="updateQty(${idx}, 1)">+</button>
+          <button style="background:#e76e6e;" onclick="removeItem(${idx})">Remove</button>
+        </div>
+
+        <div class="line-total">
+          <div>Line Total</div>
+          <div>${Rs(lineTotal)}</div>
+        </div>
+      `;
+      container.appendChild(div);
+    });
+
+    const totalQty = cart.reduce((sum, i) => sum + (i.qty || 1), 0);
+    summaryBox.style.display = 'block';
+    summaryBox.innerHTML = `
+      <div><strong>Items:</strong> ${cart.length}</div>
+      <div><strong>Total Quantity:</strong> ${totalQty}</div>
+      <div><strong>Subtotal:</strong> ${Rs(subtotal)}</div>
+      <div style="margin-top:10px;">
+        <button class="message-btn" onclick="checkout()">Proceed to Checkout</button>
+        <button class="logout-btn" style="margin-left:8px;" onclick="clearCart()">Clear Cart</button>
+      </div>
+    `;
+  }
+
+  // --- Actions ---
+  function updateQty(index, change) {
+    const cart = getCart();
+    const it = cart[index];
+    if (!it) return;
+    const maxBlocks = Infinity;
+    it.qty = clampQty((it.qty || 1) + change, maxBlocks);
+    saveCart(cart);
+    renderCart();
+  }
+  function removeItem(index) {
+    const cart = getCart();
+    cart.splice(index, 1);
+    saveCart(cart);
+    renderCart();
+  }
+  function clearCart() {
+    if (!confirm('Clear all items from your cart?')) return;
+    saveCart([]);
+    renderCart();
+  }
+  function checkout() {
+    const cart = getCart();
+    const items = cart.map(i => {
+      const unitPrice = parsePrice(i.price);
+      const availableAmt = i.quantityAvailable == null
+        ? 1
+        : parseFloat(String(i.quantityAvailable).replace(/[^\d.]/g, '')) || 1;
+      const basePrice = unitPrice * availableAmt;
+      const qty = i.qty || 1;
+      return {
+        postId: i.postId,
+        crop: i.crop,
+        seller: i.seller,
+        unitPrice,
+        availableAmt,
+        basePrice,
+        qty,
+        lineTotal: basePrice * qty
+      };
+    });
+    const subtotal = items.reduce((s, it) => s + it.lineTotal, 0);
+    const orderDraft = { items, totals: { subtotal }, createdAt: new Date().toISOString() };
+    localStorage.setItem('orderDraft', JSON.stringify(orderDraft));
+    alert('Order draft saved (wire to backend when ready).');
+  }
+
+  // --- Init ---
+  const username = localStorage.getItem('name') || localStorage.getItem('username');
+  if (username) { document.getElementById('headerUsername').textContent = `Welcome, ${username}`; }
+  renderCart();
+</script>
+</body>
+</html>

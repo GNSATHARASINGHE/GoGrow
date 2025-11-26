@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Panel - Approve Posts</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    :root{
+      --bg:#f4f6f8;
+      --ink:#333;
+      --muted:#2b5445;
+
+      --card:#ffffff;
+      --chip:#ffffff;
+
+      --brand:#2b5445;
+      --accent:#2b5445;
+
+      --good:#4caf50;
+      --bad:#f44336;
+      --logout:#e53935;
+
+      --border:#e5e7eb;
+      --shadow:0 2px 12px rgba(0,0,0,0.06);
+      --shadow-strong:0 4px 12px rgba(0, 0, 0, 0.08);
+      --radius:12px;
+    }
+    :root[data-theme="dark"]{
+      --bg:#0f1216;
+      --ink:#e3e7ea;
+      --muted:#9bc7b7;
+
+      --card:#161b20;
+      --chip:#1b2229;
+
+      --brand:#9bc7b7;
+      --accent:#2b5445;
+
+      --good:#2e7d32;
+      --bad:#d13b35;
+      --logout:#b13431;
+
+      --border:#29313a;
+      --shadow:0 2px 14px rgba(0,0,0,0.5);
+      --shadow-strong:0 4px 16px rgba(0,0,0,0.55);
+    }
+
+    * { box-sizing: border-box; transition: background-color .25s, color .25s, border-color .25s, box-shadow .25s; }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--bg);
+      color: var(--ink);
+      margin: 0;
+      padding: 0;
+    }
+    .admin-container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .top-bar {
+      background-color: var(--card);
+      border-radius: var(--radius);
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .brand {
+      font-size: 20px;
+      font-weight: bold;
+      color: var(--brand);
+      display:flex; align-items:center; gap:10px;
+    }
+    /* icon-only theme toggle */
+    .theme-toggle{
+      width:36px; height:36px; border-radius:50%; border:0;
+      display:grid; place-items:center; font-size:18px; cursor:pointer;
+      background: rgba(0,0,0,.06); color: var(--brand);
+      box-shadow: inset 0 0 0 1px var(--border);
+    }
+    :root[data-theme="dark"] .theme-toggle{
+      background: rgba(255,255,255,.12); color:#fff; box-shadow: inset 0 0 0 1px rgba(255,255,255,.15);
+    }
+
+    .admin-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      color: var(--muted);
+    }
+    .admin-actions span {
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    .logout {
+      background-color: var(--logout);
+      color: #fff;
+      border: none;
+      padding: 8px 14px;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .dashboard-summary {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 25px;
+      flex-wrap: wrap;
+    }
+    .summary-card {
+      background-color: var(--chip);
+      border-left: 4px solid var(--accent);
+      border-radius: 10px;
+      padding: 10px 15px;
+      min-width: 120px;
+      text-align: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      border: 1px solid var(--border);
+    }
+    .summary-card h4 {
+      font-size: 13px;
+      margin: 0;
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .summary-card p {
+      font-size: 16px;
+      font-weight: bold;
+      margin: 4px 0 0;
+      color: var(--ink);
+    }
+    .post-card {
+      background-color: var(--card);
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow-strong);
+      border: 1px solid var(--border);
+    }
+    .post-card h3 {
+      color: var(--accent);
+      margin-top: 0;
+      font-size: 18px;
+    }
+    .post-card p {
+      margin: 4px 0;
+      font-size: 14px;
+      color: var(--ink);
+    }
+    .post-images {
+      margin-top: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .post-images img {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 8px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    }
+    .actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 15px;
+    }
+    .actions button {
+      padding: 6px 14px;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .approve { background-color: var(--good); color: white; }
+    .reject  { background-color: var(--bad);  color: white; }
+    .no-posts {
+      text-align: center;
+      color: var(--muted);
+      font-size: 16px;
+      margin-top: 50px;
+    }
+    @media (max-width: 768px) {
+      .top-bar { flex-direction: column; align-items: flex-start; }
+      .summary-card h4 { font-size: 12px; }
+      .summary-card p { font-size: 14px; }
+      .post-card h3 { font-size: 16px; }
+      .post-card p { font-size: 13px; }
+      .actions { flex-direction: column; align-items: stretch; }
+      .actions button { font-size: 13px; padding: 8px; }
+      .logout { font-size: 13px; padding: 6px 10px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-container">
+    <div class="top-bar">
+      <div class="brand">
+        Go-Grow
+        <!-- 🌙 theme button next to brand -->
+        <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">🌙</button>
+      </div>
+      <h4 style="color:var(--accent);">Admin Approve Panel</h4>
+      <div class="admin-actions">
+        <span>Welcome, <span id="admin-name"></span></span>
+        <button class="logout" onclick="logout()">Logout</button>
+      </div>
+    </div>
+
+    <div class="dashboard-summary" id="dashboard-summary">
+      <div class="summary-card">
+        <h4>👥 Total Users</h4>
+        <p id="total-users">...</p>
+      </div>
+      <div class="summary-card">
+        <h4>🕒 Pending Posts</h4>
+        <p id="pending-posts">...</p>
+      </div>
+      <div class="summary-card">
+        <h4>✅ Approved Posts</h4>
+        <p id="approved-posts">...</p>
+      </div>
+    </div>
+
+    <div id="post-list"></div>
+    <div id="no-posts" class="no-posts" style="display:none;">
+      ✅ No pending posts to review.
+    </div>
+  </div>
+
+  <!-- ✅ Real-Time Socket.IO -->
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script>
+    const socket = io("http://localhost:3000");
+
+    // New post created
+    socket.on('new-post', (post) => {
+      if (post.status === 'pending') {
+        fetchPendingPosts();
+        fetchDashboardStats();
+      }
+    });
+
+    // Post approved or rejected
+    socket.on('post-updated', (post) => {
+      fetchPendingPosts();
+      fetchDashboardStats();
+    });
+
+    // Auth check using role
+    if (localStorage.getItem('role') !== 'admin') {
+      window.location.href = '/index.html'; // Redirect non-admins
+    }
+
+    document.getElementById('admin-name').innerText = localStorage.getItem('adminUser') || 'Admin';
+
+    function logout() {
+      localStorage.removeItem('role');
+      localStorage.removeItem('adminUser');
+      localStorage.removeItem('username');
+      window.location.href = '/index.html';
+    }
+
+    async function fetchDashboardStats() {
+      try {
+        const res = await fetch('/api/admin/dashboard-stats');
+        const stats = await res.json();
+        document.getElementById('total-users').innerText = stats.totalUsers;
+        document.getElementById('pending-posts').innerText = stats.pendingPosts;
+        document.getElementById('approved-posts').innerText = stats.approvedPosts;
+      } catch (err) {
+        console.error('Failed to load dashboard stats', err);
+      }
+    }
+
+    async function fetchPendingPosts() {
+      const res = await fetch('/api/admin/pending-posts');
+      const posts = await res.json();
+      const container = document.getElementById('post-list');
+      const noPostsDiv = document.getElementById('no-posts');
+      container.innerHTML = '';
+
+      if (!posts.length) {
+        noPostsDiv.style.display = 'block';
+        return;
+      }
+
+      noPostsDiv.style.display = 'none';
+
+      posts.forEach(post => {
+        const card = document.createElement('div');
+        card.className = 'post-card';
+
+        card.innerHTML = `
+          <h3>${post.crop}</h3>
+          <p><strong>User:</strong> ${post.user}</p>
+          <p><strong>Quantity:</strong> ${post.quantity}</p>
+          <p><strong>Price:</strong> ${post.price}</p>
+          <p><strong>Posted on:</strong> ${post.timestamp}</p>
+          <div class="post-images">
+            ${(post.imageUrls || []).map(url => `<img src="${url}" alt="Post Image" />`).join('')}
+          </div>
+          <div class="actions">
+            <button class="approve" onclick="updateStatus('${post._id}', 'approved')">Approve</button>
+            <button class="reject" onclick="updateStatus('${post._id}', 'rejected')">Reject</button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    async function updateStatus(postId, status) {
+      const res = await fetch(`/api/admin/post/${postId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      });
+
+      if (res.ok) {
+        fetchPendingPosts();
+        fetchDashboardStats();
+      } else {
+        alert("Failed to update status");
+      }
+    }
+
+    fetchDashboardStats();
+    fetchPendingPosts();
+
+    // 🌙 Theme toggle (persistent)
+    (function(){
+      const btn = document.getElementById('themeToggle');
+      const saved = localStorage.getItem('theme')
+        || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      setTheme(saved);
+
+      btn.addEventListener('click', () => {
+        const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+        setTheme(next);
+      });
+
+      function setTheme(theme){
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+        btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+      }
+    })();
+  </script>
+</body>
+</html>

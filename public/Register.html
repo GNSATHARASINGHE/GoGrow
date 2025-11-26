@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register - GoGrow</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      margin: 0;
+      background-color: #1f3f32;
+      font-family: 'Poppins', sans-serif;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .register-container {
+      width: 90%;
+      max-width: 360px;
+      background-color: #2b5445;
+      padding: 24px;
+      border-radius: 16px;
+      box-shadow: 0 0 12px rgba(0, 0, 0, 0.4);
+      text-align: center;
+    }
+
+    .register-container h1 {
+      font-size: 22px;
+      margin-bottom: 15px;
+    }
+
+    .register-container img {
+      width: 100px;
+      height: 100px;
+      object-fit: cover;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    form input,
+    form select {
+      padding: 10px;
+      font-size: 14px;
+      border: none;
+      border-radius: 8px;
+    }
+
+    select {
+      background-color: white;
+      color: #1f3f32;
+      font-weight: bold;
+    }
+
+    button {
+      padding: 12px;
+      font-size: 15px;
+      background-color: #b9e17e;
+      color: #1f3f32;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    p {
+      font-size: 12px;
+      margin-top: 12px;
+    }
+
+    a {
+      color: #b9e17e;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    small {
+      font-size: 11px;
+      color: #ccc;
+      text-align: left;
+      display: block;
+      margin-top: -8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="register-container">
+    <h1>Register to GoGrow</h1>
+    <img src="veg.png" alt="Field">
+
+    <form onsubmit="registerUser(event)" enctype="multipart/form-data">
+      <input type="text" name="name" placeholder="Full Name" required />
+      <input type="text" name="username" placeholder="Username" required />
+      <input type="email" name="email" placeholder="Email" required />
+      <input type="password" name="password" placeholder="Password" required />
+      <small>🔒 Password must be at least 8 characters long, include uppercase, lowercase, number, and a special character.</small>
+      <input type="password" name="confirmPassword" placeholder="Confirm Password" required />
+
+      <!-- ✅ New Role Dropdown -->
+      <select name="role" required>
+        <option value="user">Farmer / User</option>
+        <option value="buyer">Buyer</option>
+      </select>
+
+      <input type="file" name="profileImage" accept="image/*" required />
+      <button type="submit">Register</button>
+    </form>
+
+    <p>Already have an account? <a href="index.html">Login</a></p>
+  </div>
+
+  <script>
+    async function registerUser(e) {
+      e.preventDefault();
+
+      const form = e.target;
+      const formData = new FormData(form);
+
+      const password = formData.get('password');
+      const confirmPassword = formData.get('confirmPassword');
+
+      const passwordPolicy = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+[\]{};':"\\|,.<>/?`~\-])[A-Za-z\d!@#$%^&*()_+[\]{};':"\\|,.<>/?`~\-]{8,}$/;
+      if (!passwordPolicy.test(password)) {
+        alert("❌ Password must be at least 8 characters long and include uppercase, lowercase, number, and special character.");
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        alert("❌ Passwords do not match.");
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/register', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await res.json();
+        alert(data.message || data.error);
+
+        if (res.ok) {
+          window.location.href = 'index.html';
+        }
+      } catch (err) {
+        alert("Registration failed.");
+        console.error(err);
+      }
+    }
+  </script>
+</body>
+</html>

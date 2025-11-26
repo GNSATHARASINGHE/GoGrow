@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Welcome to GoGrow</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      margin: 0;
+      background-color: #1f3f32;
+      font-family: 'Poppins', sans-serif;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .slide-container {
+      width: 90%;
+      max-width: 360px;
+      background-color: #2b5445;
+      padding: 24px;
+      border-radius: 16px;
+      box-shadow: 0 0 12px rgba(0, 0, 0, 0.4);
+      text-align: center;
+    }
+
+    .slide {
+      display: none;
+    }
+
+    .slide.active {
+      display: block;
+    }
+
+    .slide img {
+      width: 100%;
+      max-width: 200px;
+      border-radius: 12px;
+      margin: 16px auto;
+      display: block;
+    }
+
+    .slide h1 {
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+
+    .slide h2 {
+      font-size: 18px;
+      margin: 10px 0 8px;
+    }
+
+    .slide p {
+      font-size: 14px;
+      margin-bottom: 16px;
+      padding: 0 10px;
+    }
+
+    .welcome-text {
+      font-size: 13px;
+      margin-top: -8px;
+      margin-bottom: 12px;
+      color: #d9ffd0;
+    }
+
+    .dot-container {
+      margin-bottom: 16px;
+    }
+
+    .dot {
+      height: 10px;
+      width: 10px;
+      margin: 0 4px;
+      background-color: #888;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .dot.active {
+      background-color: #b9e17e;
+    }
+
+    .slide-buttons button {
+      margin: 5px;
+      padding: 10px 18px;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .green-btn {
+      background-color: #b9e17e;
+      color: #1f3f32;
+    }
+
+    .grey-btn {
+      background-color: #444;
+      color: white;
+    }
+
+    @media (max-height: 500px) {
+      .slide p {
+        font-size: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-container">
+    <div class="slide active">
+      <h1>GoGrow</h1>
+      <!-- ✅ Welcome username -->
+      <p id="welcomeUser" class="welcome-text"></p>
+
+      <img src="veg.png" alt="Harvest">
+      <h2>Buy and sell your harvest</h2>
+      <p>This is the best platform to sell your harvest wastage and improve your knowledge level.</p>
+      <div class="dot-container">
+        <span class="dot active"></span>
+        <span class="dot"></span>
+      </div>
+      <div class="slide-buttons">
+        <button class="grey-btn" onclick="skipSlides()">Skip</button>
+        <button class="green-btn" onclick="nextSlide()">Next</button>
+      </div>
+    </div>
+
+    <div class="slide">
+      <h1>GoGrow</h1>
+      <img src="chat.png" alt="Live Chat">
+      <h2>Live Chat</h2>
+      <p>You can chat with anyone real-time and also can share your images as well.</p>
+      <div class="dot-container">
+        <span class="dot"></span>
+        <span class="dot active"></span>
+      </div>
+      <div class="slide-buttons">
+        <button class="green-btn" onclick="goTo('view-posts.html')">Next</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ✅ Show username if logged in
+    const username = localStorage.getItem('username');
+    if (username) {
+      document.getElementById('welcomeUser').textContent = `Welcome, ${username}!`;
+    }
+
+    const slides = document.querySelectorAll('.slide');
+    const dots = document.querySelectorAll('.dot');
+    let currentSlide = 0;
+
+    function nextSlide() {
+      slides[currentSlide].classList.remove('active');
+      dots[currentSlide].classList.remove('active');
+      currentSlide++;
+      slides[currentSlide].classList.add('active');
+      dots[currentSlide].classList.add('active');
+    }
+
+    function skipSlides() {
+      slides[currentSlide].classList.remove('active');
+      dots[currentSlide].classList.remove('active');
+      currentSlide = slides.length - 1;
+      slides[currentSlide].classList.add('active');
+      dots[currentSlide].classList.add('active');
+    }
+
+    function goTo(url) {
+      window.location.href = url;
+    }
+  </script>
+</body>
+</html>

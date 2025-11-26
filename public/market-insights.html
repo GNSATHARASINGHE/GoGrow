@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>GoGrow — Market Insights</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root{
+      --bg:#ffffff;
+      --card:#ffffff;
+      --card-border:#e5e7eb;
+      --accent:#22c55e;
+      --accent-strong:#16a34a;
+      --text:#111827;
+      --muted:#f3f4f6;
+      --muted-text:#374151;
+      --shadow:0 6px 18px rgba(0,0,0,.08);
+      --radius:10px;
+    }
+
+    /* 🌙 Dark theme tokens */
+    :root[data-theme="dark"]{
+      --bg:#0f1216;
+      --card:#161b20;
+      --card-border:#2a2f37;
+      --accent:#4dd0e1;
+      --accent-strong:#29b9cc;
+      --text:#e3e7ea;
+      --muted:#1b222b;
+      --muted-text:#b5c0cc;
+      --shadow:0 6px 18px rgba(0,0,0,.6);
+    }
+
+    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; font-family:'Poppins',system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; transition: background-color .25s ease, color .25s ease, border-color .25s ease; }
+    body{ margin:0; background:var(--bg); color:var(--text); }
+
+    /* Header (kept teal), now with a right-side container for toggle + Back */
+    header{
+      position:sticky; top:0; z-index:10;
+      display:flex; justify-content:space-between; align-items:center;
+      gap:12px; padding:12px 16px;
+      background:#009688; color:#fff; border-bottom:1px solid rgba(0,0,0,.06);
+    }
+    .header-left{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .header-right{ display:flex; align-items:center; gap:10px; }
+
+    .brand{ font-weight:900; font-size:clamp(20px,5vw,26px); color:#000; letter-spacing:.2px; line-height:1; }
+    .title{ display:inline-flex; align-items:center; gap:8px; font-weight:800; letter-spacing:.2px; font-size:clamp(16px,4vw,20px); color:#fff; }
+    .title-icon{ width:1.2em; height:1.2em; fill:currentColor; opacity:.95; }
+
+    /* Buttons */
+    .btn{
+      background:var(--accent); color:#ffffff; border:0;
+      padding:10px 14px; border-radius:var(--radius);
+      font-weight:800; cursor:pointer; font-size:14px; line-height:1;
+      box-shadow:0 1px 0 rgba(0,0,0,.05);
+    }
+    .btn:hover{ background:var(--accent-strong); }
+    .btn:active{ transform:scale(.98); }
+
+    /* Icon-only round theme toggle */
+    .icon-btn{
+      width:38px; height:38px; border-radius:50%; border:0;
+      display:grid; place-items:center; font-size:20px; cursor:pointer;
+      background:var(--accent); color:#fff; box-shadow:var(--shadow);
+      transition: transform .12s ease, opacity .2s ease, background-color .25s ease;
+    }
+    .icon-btn:hover{ opacity:.92; }
+    .icon-btn:active{ transform:scale(.96); }
+    :root[data-theme="dark"] .icon-btn{ background:#2b5445; }
+
+    main{ padding:12px; max-width:1100px; margin:0 auto; }
+
+    /* Card */
+    .card{
+      background:var(--card); border-radius:var(--radius); padding:14px;
+      box-shadow:var(--shadow); border:1px solid var(--card-border);
+      color:var(--text);
+    }
+    .card h3{ margin:0 0 12px; font-size:16px; color:var(--text); }
+
+    .filters{ display:grid; gap:12px; grid-template-columns:1fr; }
+    @media (min-width:720px){ .filters{ grid-template-columns:repeat(2,1fr); } }
+    @media (min-width:1024px){ .filters{ grid-template-columns:repeat(4,1fr); } }
+
+    .field{ display:flex; flex-direction:column; gap:8px; }
+    label{ font-size:12px; color:var(--muted-text); }
+    select{
+      width:100%; padding:12px; border-radius:var(--radius); border:1px solid #d1d5db;
+      font-size:14px; color:var(--text); background:var(--card);
+    }
+    .row{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+
+    /* Chips */
+    .chip{
+      background:var(--muted); color:var(--text);
+      border-radius:var(--radius); padding:10px 14px;
+      font-size:14px; cursor:pointer; user-select:none; min-width:96px; text-align:center;
+      border:1px solid var(--card-border);
+      transition:background .15s, transform .06s, color .15s, border-color .15s, font-weight .15s, box-shadow .15s;
+    }
+    .chip:active{ transform:scale(.98); }
+    .chip.active{
+      background:#e8f7ee;
+      border-color:#86efac;
+      color:#065f46;
+      font-weight:700;
+      box-shadow:inset 0 0 0 1px rgba(22,163,74,.15);
+    }
+
+    .actions .btn{ width:100%; }
+    @media (min-width:480px){ .actions .btn{ width:auto; } }
+
+    .charts{ display:grid; gap:12px; grid-template-columns:1fr; margin-top:12px; }
+    @media (min-width:720px){ .charts{ grid-template-columns:repeat(2,1fr); } }
+    @media (min-width:1024px){ .charts{ grid-template-columns:repeat(3,1fr); } }
+
+    canvas{ width:100% !important; height:260px !important; }
+    @media (min-width:720px){ canvas{ height:300px !important; } }
+    @media (min-width:1024px){ canvas{ height:340px !important; } }
+
+    .note{ font-size:12px; color:var(--muted-text); }
+    .tiny{ font-size:11px; color:var(--muted-text); }
+    .spacer{ flex:1 1 auto; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-left">
+      <span class="brand">Go-Grow</span>
+      <span class="title">
+        <svg class="title-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M11 2a1 1 0 0 1 1-1 11 11 0 1 1-11 11 1 1 0 0 1 1-1h9V2Z"></path>
+          <path d="M13 1a1 1 0 0 1 1 1v9h9a1 1 0 0 1 1 1 11 11 0 0 1-11 11 1 1 0 0 1-1-1V1Z"></path>
+        </svg>
+        Market Insights
+      </span>
+    </div>
+    <div class="header-right">
+      <!-- 🌙 icon-only toggle -->
+      <button id="themeToggle" class="icon-btn" aria-label="Toggle theme">🌙</button>
+      <button class="btn" onclick="back()">Back</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <h3>Filters</h3>
+      <div class="filters">
+        <!-- Regions -->
+        <div class="field">
+          <label>Regions (tap to toggle)</label>
+          <div class="row" id="region-chips">
+            <div class="chip active" data-value="Ratnapura">Ratnapura</div>
+            <div class="chip active" data-value="Kegalle">Kegalle</div>
+          </div>
+          <div class="tiny" style="margin-top:6px;">
+          <h3 style="margin:0;font-size:1rem;">
+          <a href="https://welandapola.com/" class="veg-link" target="_blank" rel="noopener noreferrer">
+          Price Indexes of Vegetables
+          </a>
+          </h3>
+          </div>
+
+
+        </div>
+        <style>/* Hover + focus styles for the region link */
+.veg-link {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+  display: inline-block;
+  position: relative;
+  transition: color 180ms ease;
+  outline: none;
+}
+
+/* Underline slide */
+.veg-link::after{
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -4px;           /* distance from text */
+  height: 3px;            /* underline thickness */
+  width: 0%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-strong));
+  border-radius: 3px;
+  transition: width 220ms ease;
+}
+
+/* Hover / keyboard focus */
+.veg-link:hover,
+.veg-link:focus,
+.veg-link:focus-visible {
+  color: var(--accent-strong);
+  text-decoration: none; /* we use the animated underline instead */
+  cursor: pointer;
+}
+.veg-link:hover::after,
+.veg-link:focus::after,
+.veg-link:focus-visible::after {
+  width: 100%;
+}
+
+/* Touch device fallback: show simple underline when pressed */
+.veg-link:active {
+  text-decoration: underline;
+  color: var(--accent-strong);
+}
+
+/* Slightly increase specificity to override inline styles if needed */
+.card .tiny .veg-link { color: var(--accent) !important; }
+.card .tiny .veg-link:hover { color: var(--accent-strong) !important; }
+ </style>
+
+        <!-- Season -->
+        <div class="field">
+          <label>Season for Forecast</label>
+          <select id="season" aria-label="Season">
+            <option value="Maha" selected>Maha</option>
+            <option value="Yala">Yala</option>
+          </select>
+        </div>
+
+        <!-- Years -->
+        <div class="field">
+          <label>Historical Years (training window)</label>
+          <div class="row" id="year-chips">
+            <label class="chip active"><input type="checkbox" class="y" value="2022" checked style="display:none;">2022</label>
+            <label class="chip active"><input type="checkbox" class="y" value="2023" checked style="display:none;">2023</label>
+            <label class="chip active"><input type="checkbox" class="y" value="2024" checked style="display:none;">2024</label>
+            <label class="chip active"><input type="checkbox" class="y" value="2025" checked style="display:none;">2025</label>
+          </div>
+          <div class="row">
+            <button class="btn" id="years-select-all" type="button">Select All</button>
+            <button class="btn" id="years-clear" type="button">Clear</button>
+            <span class="spacer"></span>
+            <span class="tiny">Tip: tap chips to toggle each year. Forecast year = max(selected) + 1.</span>
+          </div>
+          <div class="note">The backend forecasts the <b>next</b> year using the years you select above.</div>
+        </div>
+
+        <!-- Actions -->
+        <div class="field actions">
+          <label style="visibility:hidden;">Actions</label>
+          <div class="row">
+            <button class="btn" onclick="loadHistorical()">Load Historical Pies</button>
+            <button class="btn" onclick="loadForecast()">Load Forecast Pies</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="charts">
+      <div class="card">
+        <h3 id="demand-title">Demand Share</h3>
+        <canvas id="demandPie" aria-label="Demand share by crop"></canvas>
+      </div>
+      <div class="card">
+        <h3 id="supply-title">Supply Share</h3>
+        <canvas id="supplyPie" aria-label="Supply share by crop"></canvas>
+      </div>
+      <div class="card">
+        <h3 id="gap-title">Positive Gap (Demand − Supply)</h3>
+        <canvas id="gapPie" aria-label="Positive gap by crop"></canvas>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // ---------- auth gate (unchanged) ----------
+    (function gate(){
+      const role = localStorage.getItem('role');
+      if(!role){ /* window.location.replace('index.html'); */ }
+    })();
+
+    const API_BASE = ""; // same-origin
+    let demandChart, supplyChart, gapChart;
+
+    // ---------- chips (unchanged) ----------
+    document.getElementById('region-chips').addEventListener('click', (e) => {
+      const chip = e.target.closest('.chip');
+      if (!chip) return;
+      e.preventDefault();
+      chip.classList.toggle('active');
+    });
+
+    const yearChipsEl = document.getElementById('year-chips');
+    yearChipsEl.addEventListener('click', (e) => {
+      const chip = e.target.closest('.chip');
+      if (!chip) return;
+      e.preventDefault();
+      chip.classList.toggle('active');
+      const input = chip.querySelector('input.y');
+      if (input) input.checked = chip.classList.contains('active');
+    });
+
+    document.getElementById('years-select-all').addEventListener('click', () => {
+      [...yearChipsEl.querySelectorAll('.chip')].forEach(chip => {
+        chip.classList.add('active');
+        const input = chip.querySelector('input.y'); if (input) input.checked = true;
+      });
+    });
+    document.getElementById('years-clear').addEventListener('click', () => {
+      [...yearChipsEl.querySelectorAll('.chip')].forEach(chip => {
+        chip.classList.remove('active');
+        const input = chip.querySelector('input.y'); if (input) input.checked = false;
+      });
+    });
+
+    function getFilters(){
+      const regions = [...document.querySelectorAll('#region-chips .chip.active')].map(el => el.dataset.value);
+      const years   = [...document.querySelectorAll('#year-chips .chip')].map(chip =>
+        chip.classList.contains('active') ? Number(chip.querySelector('.y').value) : null
+      ).filter(Boolean);
+      const season  = document.getElementById('season').value;
+      return { regions, years, season };
+    }
+
+    function destroyIf(chart){ if(chart) chart.destroy(); }
+
+    // ---------- Chart helpers: read CSS colors so legends match theme ----------
+    function cssVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+    function legendColor(){ return cssVar('--text') || '#111827'; }
+
+    function renderPies(labels, supply, demand, gap, titles={}){
+      document.getElementById('demand-title').textContent = titles.demand || 'Demand Share';
+      document.getElementById('supply-title').textContent = titles.supply || 'Supply Share';
+      document.getElementById('gap-title').textContent    = titles.gap    || 'Positive Gap (Demand − Supply)';
+
+      const demandCtx = document.getElementById('demandPie').getContext('2d');
+      const supplyCtx = document.getElementById('supplyPie').getContext('2d');
+      const gapCtx    = document.getElementById('gapPie').getContext('2d');
+
+      destroyIf(demandChart); destroyIf(supplyChart); destroyIf(gapChart);
+
+      const commonOpts = {
+        responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{ position:'bottom', labels:{ color: legendColor(), font:{ size:13, weight:'600' } } } }
+      };
+
+      demandChart = new Chart(demandCtx, { type:'pie', data:{ labels, datasets:[{ data:demand }] }, options:commonOpts });
+      supplyChart = new Chart(supplyCtx, { type:'pie', data:{ labels, datasets:[{ data:supply }] }, options:commonOpts });
+      gapChart    = new Chart(gapCtx,    { type:'pie', data:{ labels, datasets:[{ data:gap    }] }, options:commonOpts });
+    }
+
+    // When theme changes, update legend colors
+    const themeObserver = new MutationObserver(() => {
+      [demandChart, supplyChart, gapChart].forEach(ch => {
+        if(!ch) return;
+        if(!ch.options.plugins) ch.options.plugins = {};
+        if(!ch.options.plugins.legend) ch.options.plugins.legend = {};
+        if(!ch.options.plugins.legend.labels) ch.options.plugins.legend.labels = {};
+        ch.options.plugins.legend.labels.color = legendColor();
+        ch.update();
+      });
+    });
+    themeObserver.observe(document.documentElement, { attributes:true, attributeFilter:['data-theme'] });
+
+    // ---------- API calls (unchanged) ----------
+    async function loadHistorical(){
+      const { regions, years } = getFilters();
+      const seasons = ["Maha","Yala"];
+      try{
+        const res = await fetch(`${API_BASE}/api/aggregate`,{
+          method:'POST',
+          headers:{ 'Content-Type':'application/json' },
+          body:JSON.stringify({ regions, seasons, years })
+        });
+        if(!res.ok){ console.error(await res.text()); alert('Failed to load historical pies'); return; }
+        const json = await res.json();
+        renderPies(json.labels, json.supply, json.demand, json.positive_gap, {
+          demand:`Historical Demand Share (${years.join(', ')})`,
+          supply:`Historical Supply Share (${years.join(', ')})`,
+          gap:   `Historical Positive Gap (${years.join(', ')})`
+        });
+      }catch(e){ console.error(e); alert('Network error while loading historical pies'); }
+    }
+
+    async function loadForecast(){
+      const { regions, years, season } = getFilters();
+      try{
+        const res = await fetch(`${API_BASE}/api/forecast`,{
+          method:'POST',
+          headers:{ 'Content-Type':'application/json' },
+          body:JSON.stringify({ regions, season, years })
+        });
+        if(!res.ok){ console.error(await res.text()); alert('Failed to load forecast pies'); return; }
+        const json = await res.json();
+        renderPies(json.labels, json.supply, json.demand, json.positive_gap, {
+          demand:`Forecasted Demand Share (${json.meta?.season_forecasted || season} ${json.meta?.forecast_year || ''})`,
+          supply:`Forecasted Supply Share (${json.meta?.season_forecasted || season} ${json.meta?.forecast_year || ''})`,
+          gap:   `Forecasted Positive Gap (${json.meta?.season_forecasted || season} ${json.meta?.forecast_year || ''})`
+        });
+      }catch(e){ console.error(e); alert('Network error while loading forecast pies'); }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadForecast);
+
+    function back(){ localStorage.clear(); window.location.replace('view-posts.html'); }
+
+    // ---------- Theme toggle logic ----------
+    const toggleBtn = document.getElementById('themeToggle');
+    const saved = localStorage.getItem('theme') ||
+      (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    setTheme(saved);
+
+    toggleBtn.addEventListener('click', () => {
+      const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+      setTheme(next);
+    });
+
+    function setTheme(theme){
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem('theme', theme);
+      toggleBtn.textContent = theme === 'dark' ? '☀️' : '🌙';
+    }
+  </script>
+</body>
+</html>

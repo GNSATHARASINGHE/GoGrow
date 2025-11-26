@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Create Post</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    * {
+      box-sizing: border-box;  
+    }
+
+    body {
+      background-color: #1f3f32;
+      font-family: 'Poppins', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 15px;
+      color: white;
+    }
+
+    .login-container {
+      background-color: #2b5445;
+      padding: 25px 20px;
+      border-radius: 15px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.3);
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+      font-size: 20px;
+    }
+
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+    }
+
+    input {
+      background-color: #eee;
+      color: #333;
+    }
+
+    input[type="file"] {
+      background-color: #fff;
+      padding: 8px;
+    }
+
+    button {
+      background-color: #b9e17e;
+      color: #1f3f32;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s ease-in-out;
+    }
+
+    button:hover {
+      background-color: #a2c65f;
+    }
+
+    a {
+      color: #b9e17e;
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    #preview {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 10px;
+    }
+
+    .preview-item {
+      position: relative;
+      margin: 5px;
+    }
+
+    .preview-item img {
+      max-width: 80px;
+      border-radius: 8px;
+      border: 2px solid #eee;
+    }
+
+    .remove-btn {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      background-color: #ff4d4d;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 14px;
+      width: 20px;
+      height: 20px;
+      line-height: 18px;
+      text-align: center;
+    }
+
+    @media (max-width: 400px) {
+      .login-container {
+        padding: 20px 15px;
+      }
+
+      input, button {
+        font-size: 14px;
+      }
+
+      h1 {
+        font-size: 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <h1>Post Harvest Details</h1>
+    <form id="postForm" onsubmit="submitPost(event)" enctype="multipart/form-data">
+      <input type="text" placeholder="Crop Name" required id="crop" />
+      <input type="text" placeholder="Quantity (e.g., 50)" required id="quantity" />
+      <input type="text" placeholder="Price (e.g., 100)" required id="price" />
+
+      <!-- Allow multiple images -->
+      <input type="file" accept="image/*" id="imageInput" multiple />
+
+      <div id="preview"></div>
+      <button type="submit">Post</button>
+    </form>
+    <p><a href="view-posts.html">← View All Posts</a></p>
+  </div>
+
+  <script>
+    const selectedImages = [];
+
+    // Handle multiple image selection
+    document.getElementById('imageInput').addEventListener('change', function () {
+      const files = Array.from(this.files); // convert FileList to array
+      files.forEach(file => {
+        selectedImages.push(file);
+        displayPreview(file);
+      });
+      this.value = ''; // reset input
+    });
+
+    function displayPreview(file) {
+      const preview = document.getElementById('preview');
+      const index = selectedImages.indexOf(file);
+
+      const item = document.createElement('div');
+      item.className = 'preview-item';
+
+      const img = document.createElement('img');
+      img.src = URL.createObjectURL(file);
+
+      const removeBtn = document.createElement('button');
+      removeBtn.innerHTML = '×';
+      removeBtn.className = 'remove-btn';
+      removeBtn.onclick = () => {
+        selectedImages.splice(index, 1);
+        item.remove();
+        refreshPreview(); // re-render previews
+      };
+
+      item.appendChild(img);
+      item.appendChild(removeBtn);
+      preview.appendChild(item);
+    }
+
+    function refreshPreview() {
+      const preview = document.getElementById('preview');
+      preview.innerHTML = '';
+      selectedImages.forEach(file => displayPreview(file));
+    }
+
+    async function submitPost(e) {
+      e.preventDefault();
+
+      const loggedInUser = localStorage.getItem('username') || localStorage.getItem('name');
+      if (!loggedInUser) {
+        alert('❌ You must be logged in to create a post.');
+        window.location.href = 'index.html';
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('user', loggedInUser);
+      formData.append('crop', document.getElementById('crop').value);
+      formData.append('quantity', document.getElementById('quantity').value);
+      formData.append('price', document.getElementById('price').value);
+
+      // Append all selected images
+      selectedImages.forEach(img => formData.append('images[]', img));
+
+      try {
+        const res = await fetch('/api/post', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await res.json();
+        alert(data.message || data.error);
+        if (res.ok) window.location.href = 'view-posts.html';
+      } catch (err) {
+        console.error(err);
+        alert('Something went wrong while posting. Please try again.');
+      }
+    }
+
+    // Auto-format quantity field
+    document.getElementById('quantity').addEventListener('blur', function () {
+      let val = this.value.trim();
+      if (val && !val.toLowerCase().includes('kg')) {
+        this.value = val + 'kg';
+      }
+    });
+
+    // Auto-format price field
+    document.getElementById('price').addEventListener('blur', function () {
+      let val = this.value.trim();
+      if (val && !val.toLowerCase().includes('rs')) {
+        this.value = 'Rs ' + val + '/kg';
+      }
+    });
+  </script>
+</body>
+</html>

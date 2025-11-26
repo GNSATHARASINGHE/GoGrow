@@ -1,0 +1,387 @@
+<!-- File: crop-recommendation.html (mobile-responsive with required-field validation) -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover"
+  />
+  <title>Crop Recommendation</title>
+
+  <!-- 🔒 user-only guard (runs before content renders) -->
+  <script>
+    (function guard() {
+      const role = localStorage.getItem("role");
+      if (role !== "user") {
+        window.location.replace("view-posts.html");
+      }
+    })();
+  </script>
+
+  <style>
+    :root{
+      --bg:#f4f6f8;
+      --card:#ffffff;
+      --ink:#333;
+      --muted:#6b7280;
+      --brand:#009688;
+      --accent:#2563eb;
+      --weather:#e0f7fa;
+      --radius:14px;
+      --shadow:0 4px 12px rgba(0,0,0,.08);
+      --gap:14px;
+      --danger:#b91c1c;
+      --danger-soft: rgba(239,68,68,.15);
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--ink);
+      font-family:Poppins,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+    }
+
+    .container{
+      max-width:800px;
+      margin:0 auto;
+      background:var(--card);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:clamp(16px, 2.5vw, 24px);
+    }
+
+    h2{
+      margin:0 0 12px 0;
+      font-size:clamp(20px, 2.5vw, 28px);
+      line-height:1.2;
+    }
+
+    /* Weather card */
+    .weather-box{
+      background:var(--weather);
+      border-radius:10px;
+      padding:14px 16px;
+      box-shadow:0 2px 8px rgba(0,0,0,.08);
+      margin:8px 0 18px;
+    }
+    .weather-box h4{
+      margin:0 0 6px;
+      font-size:clamp(14px, 2.2vw, 16px);
+      color:#00796b;
+      font-weight:600;
+    }
+    .weather-header{
+      text-align:center;
+      margin:8px 0;
+    }
+    .weather-temp{
+      font-size:clamp(24px, 5.2vw, 32px);
+      font-weight:800;
+      color:var(--accent);
+    }
+    .weather-stats{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:10px;
+      font-size:clamp(13px, 2.2vw, 14px);
+    }
+    .weather-stats div{
+      text-align:center;
+      background:rgba(255,255,255,.55);
+      border-radius:8px;
+      padding:8px 6px;
+    }
+    @media (max-width: 480px){
+      .weather-stats{ grid-template-columns: repeat(2, 1fr); }
+    }
+
+    /* Form */
+    form{
+      display:grid;
+      gap:var(--gap);
+      margin-top:6px;
+    }
+
+    /* Responsive grid for inputs */
+    .form-grid{
+      display:grid;
+      gap:var(--gap);
+      grid-template-columns: 1fr;
+    }
+    @media (min-width: 520px){
+      .form-grid.cols-2{ grid-template-columns: 1fr 1fr; }
+      .form-grid.cols-3{ grid-template-columns: 1fr 1fr 1fr; }
+    }
+
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    label{
+      font-size:13px;
+      color:var(--muted);
+    }
+    input[type="number"]{
+      width:100%;
+      padding:12px 12px;
+      border-radius:10px;
+      border:1px solid #d1d5db;
+      font-size:16px; /* ensures >= 16px to avoid iOS zoom */
+      background:#fff;
+      color:var(--ink);
+      outline:none;
+      transition:border-color .15s ease;
+      -moz-appearance:textfield;
+    }
+    input[type="number"]:focus{
+      border-color:var(--brand);
+      box-shadow:0 0 0 3px rgba(0,150,136,.12);
+    }
+    /* Remove number spinners */
+    input[type=number]::-webkit-outer-spin-button,
+    input[type=number]::-webkit-inner-spin-button{
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    button[type="submit"]{
+      width:100%;
+      padding:14px 16px;
+      border-radius:10px;
+      border:none;
+      background:var(--brand);
+      color:#fff;
+      font-weight:800;
+      font-size:16px;
+      cursor:pointer;
+      transition:transform .05s ease, opacity .2s ease, box-shadow .2s ease;
+      box-shadow:0 6px 14px rgba(0,150,136,.25);
+    }
+    button[type="submit"]:active{
+      transform:translateY(1px);
+    }
+    button[type="submit"]:disabled{
+      opacity:.7;
+      cursor:not-allowed;
+      box-shadow:none;
+    }
+
+    #recommendResult{
+      margin-top:8px;
+      font-weight:800;
+      font-size:clamp(14px, 2.4vw, 16px);
+    }
+
+    a.back{
+      display:inline-block;
+      margin-top:12px;
+      color:#00796b;
+      text-decoration:none;
+      font-weight:600;
+      padding:8px 0;
+    }
+    a.back:hover{ text-decoration:underline; }
+
+    /* 🚨 Validation styles */
+    .form-error{
+      margin-top:4px;
+      color:var(--danger);
+      font-weight:700;
+      font-size:14px;
+    }
+    .is-invalid{
+      border-color:#ef4444 !important;
+      box-shadow:0 0 0 3px var(--danger-soft) !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>🌱 Crop Recommendation</h2>
+
+    <!-- Weather (also shown on this page) -->
+    <div id="rec-weather" class="weather-box">
+      <p>Getting weather data...</p>
+    </div>
+
+    <!-- Inputs -->
+    <form id="cropForm" novalidate>
+      <!-- NPK -->
+      <div class="form-grid cols-3">
+        <div class="field">
+          <label for="inN">Nitrogen (N)</label>
+          <input id="inN" type="number" name="N" placeholder="e.g., 90" min="0" step="1" inputmode="numeric" required />
+        </div>
+        <div class="field">
+          <label for="inP">Phosphorus (P)</label>
+          <input id="inP" type="number" name="P" placeholder="e.g., 42" min="0" step="1" inputmode="numeric" required />
+        </div>
+        <div class="field">
+          <label for="inK">Potassium (K)</label>
+          <input id="inK" type="number" name="K" placeholder="e.g., 36" min="0" step="1" inputmode="numeric" required />
+        </div>
+      </div>
+
+      <!-- Weather-driven fields -->
+      <div class="form-grid cols-2">
+        <div class="field">
+          <label for="f-temp">Temperature (°C)</label>
+          <input id="f-temp" type="number" name="temperature" placeholder="Auto-filled" step="0.1" inputmode="decimal" required />
+        </div>
+        <div class="field">
+          <label for="f-hum">Humidity (%)</label>
+          <input id="f-hum" type="number" name="humidity" placeholder="Auto-filled" min="0" max="100" step="1" inputmode="numeric" required />
+        </div>
+      </div>
+
+      <!-- Soil + rainfall -->
+      <div class="form-grid cols-2">
+        <div class="field">
+          <label for="inPh">Soil pH</label>
+          <input id="inPh" type="number" name="ph" placeholder="e.g., 6.5" min="3" max="9" step="0.1" inputmode="decimal" required />
+        </div>
+        <div class="field">
+          <label for="inRain">Rainfall (mm)</label>
+          <input id="inRain" type="number" name="rainfall" placeholder="e.g., 120" min="0" step="0.1" inputmode="decimal" required />
+        </div>
+      </div>
+
+      <button type="submit">Get Recommendation</button>
+    </form>
+
+    <!-- 🔴 Validation message placeholder -->
+    <p id="formError" class="form-error" role="alert" aria-live="polite"></p>
+
+    <p id="recommendResult" role="status" aria-live="polite"></p>
+
+    <a class="back" href="view-posts.html">← Back to Posts</a>
+  </div>
+
+  <script>
+    // 🌦️ Weather API key (same as your other page)
+    const WEATHER_API_KEY = 'e8e2f1628840824475b2005d08244c4f';
+
+    function renderWeather(data, box){
+      box.innerHTML = `
+        <h4>🌦️ Weather in Your Area</h4>
+        <div class="weather-header">
+          <div class="weather-temp">${Number(data.main.temp).toFixed(1)} °C</div>
+        </div>
+        <div class="weather-stats">
+          <div><strong>Humidity:</strong> ${Number(data.main.humidity).toFixed(0)}%</div>
+          <div><strong>Clouds:</strong> ${data.clouds?.all ?? '—'}%</div>
+          <div><strong>Wind:</strong> ${data.wind?.speed ?? '—'} m/s</div>
+        </div>`;
+    }
+
+    async function loadWeatherAndPrefill(){
+      const box = document.getElementById('rec-weather');
+      if(!("geolocation" in navigator)){
+        box.innerHTML = `<p>⚠️ Geolocation not supported by browser.</p>`;
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(async pos=>{
+        const {latitude:lat, longitude:lon} = pos.coords;
+        try{
+          const r = await fetch(
+            `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${WEATHER_API_KEY}&units=metric`
+          );
+          const data = await r.json();
+          if (!r.ok || (data && data.cod && data.cod !== 200)) {
+            throw new Error(data?.message || 'Weather API error');
+          }
+          renderWeather(data, box);
+          // Prefill temperature & humidity from live weather
+          const tempEl = document.getElementById('f-temp');
+          const humEl  = document.getElementById('f-hum');
+          if (tempEl) tempEl.value = Number(data.main.temp).toFixed(1);
+          if (humEl)  humEl.value  = Number(data.main.humidity).toFixed(0);
+        }catch(e){
+          console.error(e);
+          box.innerHTML = `<p>⚠️ Could not load weather data.</p>`;
+        }
+      }, ()=>{
+        box.innerHTML = `<p>⚠️ Location access denied. Weather not available.</p>`;
+      });
+    }
+
+    // ✅ Required-field validation + submission
+    const form = document.getElementById('cropForm');
+    const errorEl = document.getElementById('formError');
+    const resultEl = document.getElementById('recommendResult');
+
+    // Clear errors on input and remove invalid highlight
+    form.querySelectorAll('input[required]').forEach(inp=>{
+      inp.addEventListener('input', ()=>{
+        inp.classList.remove('is-invalid');
+        if (errorEl.textContent) errorEl.textContent = '';
+      });
+    });
+
+    form.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      errorEl.textContent = '';
+      resultEl.textContent = '';
+
+      // 1) Built-in validity
+      if (!form.checkValidity()) {
+        // mark invalids
+        form.querySelectorAll('input[required]').forEach(inp=>{
+          if (!inp.checkValidity()) inp.classList.add('is-invalid');
+        });
+        form.reportValidity();
+        errorEl.textContent = 'Please fill all required fields to get a crop recommendation.';
+        return;
+      }
+
+      // 2) Ensure numeric (no NaN)
+      const fd = new FormData(form);
+      const payload = Object.fromEntries(fd.entries());
+      for (const [k, v] of Object.entries(payload)) {
+        const num = Number(v);
+        if (!Number.isFinite(num)) {
+          errorEl.textContent = 'Please enter valid numbers in all fields.';
+          const el = form.querySelector(`[name="${k}"]`);
+          if (el) el.classList.add('is-invalid');
+          return;
+        }
+        payload[k] = num;
+      }
+
+      // 3) Submit
+      const btn = form.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      btn.textContent = 'Processing...';
+
+      try {
+        const res = await fetch('/api/crop/recommend', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(text || 'Request failed');
+        }
+        const data = await res.json();
+        resultEl.textContent = 'Recommended Crop: ' + (data.recommended_crop || '—');
+      } catch (err) {
+        console.error(err);
+        errorEl.textContent = 'Error: Unable to get recommendation. Please try again.';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Get Recommendation';
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', loadWeatherAndPrefill);
+  </script>
+</body>
+</html>

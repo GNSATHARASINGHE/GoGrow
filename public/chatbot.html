@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GoGrow Chatbot</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Poppins', sans-serif;
+      background: transparent;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .chat-container {
+      background: rgba(255, 255, 255, 0.95);
+      width: 100%;
+      max-width: 360px;
+      height: 85vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 0 12px rgba(0, 0, 0, 0.15);
+      border-radius: 16px;
+    }
+
+    .chat-header {
+      background-color: #4caf50;
+      color: white;
+      text-align: center;
+      padding: 12px;
+      font-size: 18px;
+      font-weight: bold;
+      position: relative;
+      border-top-left-radius: 16px;
+      border-top-right-radius: 16px;
+    }
+
+    .close-btn {
+      position: absolute;
+      right: 12px;
+      top: 10px;
+      font-size: 18px;
+      background: none;
+      border: none;
+      color: white;
+      cursor: pointer;
+    }
+
+    .messages {
+      flex: 1;
+      padding: 10px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .msg {
+      margin: 5px 0;
+      padding: 8px 12px;
+      border-radius: 16px;
+      max-width: 80%;
+      word-wrap: break-word;
+      font-size: 14px;
+    }
+
+    .user {
+      align-self: flex-end;
+      background: #d2f8d2;
+      color: #1b5e20;
+    }
+
+    .bot {
+      align-self: flex-start;
+      background: #e0f7fa;
+      color: #006064;
+    }
+
+    .input-area {
+      display: flex;
+      padding: 10px;
+      border-top: 1px solid #ccc;
+      background-color: white;
+      border-bottom-left-radius: 16px;
+      border-bottom-right-radius: 16px;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1px solid #ccc;
+      border-radius: 16px;
+      margin-right: 10px;
+      font-size: 14px;
+    }
+
+    button {
+      padding: 8px 14px;
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      border-radius: 16px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #388e3c;
+    }
+
+    @media (max-width: 500px) {
+      .chat-container {
+        height: 90vh;
+        width: 95%;
+        max-width: none;
+        margin: auto;
+        border-radius: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <div class="chat-header">
+      🌿 GoGrow Chatbot
+      <button class="close-btn" onclick="closeChat()">❌</button>
+    </div>
+    <div class="messages" id="messages"></div>
+    <div class="input-area">
+      <input type="text" id="userInput" placeholder="Ask something..." onkeydown="handleKey(event)" />
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
+  <script>
+    function handleKey(event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        sendMessage();
+      }
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById('userInput');
+      const msg = input.value.trim();
+      if (!msg) return;
+
+      const messages = document.getElementById('messages');
+      messages.innerHTML += `<div class="msg user">${msg}</div>`;
+
+      try {
+        const res = await fetch('/api/chatbot', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: msg })
+        });
+
+        const data = await res.json();
+        messages.innerHTML += `<div class="msg bot">${data.reply}</div>`;
+      } catch (error) {
+        messages.innerHTML += `<div class="msg bot">Sorry, something went wrong.</div>`;
+      }
+
+      input.value = '';
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function closeChat() {
+      const iframe = window.parent.document.getElementById('chatbox-frame');
+      if (iframe) iframe.style.display = 'none';
+    }
+  </script>
+</body>
+</html>

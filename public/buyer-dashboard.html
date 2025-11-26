@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Buyer Dashboard - GoGrow</title>
+  <style>
+    body {
+      background-color: #f4f6f8;
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 15px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+      background-color: #ffffff;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    #headerUsername {
+      font-weight: bold;
+      font-size: 14px;
+      color: #009688;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 22px;
+      color: #2c3e50;
+    }
+
+    .logout-btn,
+    .chat-btn {
+      border: none;
+      padding: 10px 18px;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 14px;
+      cursor: pointer;
+      color: white;
+      transition: background-color 0.2s;
+    }
+
+    .logout-btn {
+      background-color: #e76e6e;
+    }
+
+    .chat-btn {
+      background-color: #4caf50;
+    }
+
+    #searchInput {
+      width: 100%;
+      padding: 12px;
+      margin: 15px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 15px;
+    }
+
+    .post {
+      background-color: #f9f9f9;
+      margin-bottom: 20px;
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    .post img {
+      width: 100%;
+      max-height: 200px;
+      object-fit: cover;
+      border-radius: 10px;
+      margin-bottom: 12px;
+    }
+
+    .post-details h3 {
+      margin: 0 0 6px;
+      font-size: 18px;
+      color: #34495e;
+    }
+
+    .post-details p {
+      margin: 4px 0;
+      font-size: 14px;
+      color: #555;
+    }
+
+    .post .chat-btn {
+      margin-top: 10px;
+      width: 100%;
+      padding: 10px;
+      font-size: 15px;
+    }
+
+    .no-posts {
+      text-align: center;
+      font-size: 16px;
+      color: #999;
+      margin-top: 30px;
+    }
+
+    /* ✅ Mobile-friendly */
+    @media (max-width: 600px) {
+      .header-bar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .user-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+      }
+
+      .logout-btn,
+      .chat-btn {
+        width: 100%;
+        font-size: 15px;
+      }
+
+      h2 {
+        font-size: 20px;
+      }
+
+      #searchInput {
+        font-size: 16px;
+      }
+
+      .post-details h3 {
+        font-size: 16px;
+      }
+
+      .post-details p {
+        font-size: 13px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header-bar">
+      <h2>GoGrow - Buyer View</h2>
+      <div class="user-info">
+        <div id="headerUsername">Welcome, Buyer</div>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+        <button class="chat-btn" onclick="goToChat()">Messages</button>
+      </div>
+    </div>
+
+    <input
+      type="text"
+      id="searchInput"
+      placeholder="Search by crop name..."
+      oninput="filterPosts()"
+    />
+
+    <div id="postsContainer"></div>
+    <div class="no-posts" id="noPostsMsg" style="display: none;">No matching posts found.</div>
+  </div>
+
+  <script>
+    let allPosts = [];
+
+    async function loadPosts() {
+      try {
+        const res = await fetch('/api/posts');
+        allPosts = await res.json();
+        renderPosts(allPosts);
+      } catch (err) {
+        alert('Failed to load posts.');
+        console.error(err);
+      }
+    }
+
+    function renderPosts(posts) {
+      const container = document.getElementById('postsContainer');
+      const noPostsMsg = document.getElementById('noPostsMsg');
+      container.innerHTML = '';
+
+      if (posts.length === 0) {
+        noPostsMsg.style.display = 'block';
+        return;
+      }
+
+      noPostsMsg.style.display = 'none';
+
+      posts.forEach((post) => {
+        const imageUrl = post.imageUrls?.[0] ? `http://localhost:3000${post.imageUrls[0]}` : '';
+
+        const div = document.createElement('div');
+        div.className = 'post';
+        div.innerHTML = `
+          ${imageUrl ? `<img src="${imageUrl}" alt="Crop Image" />` : ''}
+          <div class="post-details">
+            <h3>${post.user}</h3>
+            <p><strong>Crop:</strong> ${post.crop}</p>
+            <p><strong>Quantity:</strong> ${post.quantity}</p>
+            <p><strong>Price:</strong> ${post.price}</p>
+            <p><strong>Date:</strong> ${post.timestamp}</p>
+            <button class="chat-btn" onclick="messageSeller('${post.author}')">Message Seller</button>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function filterPosts() {
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      const filtered = allPosts.filter(post => post.crop.toLowerCase().includes(searchTerm));
+      renderPosts(filtered);
+    }
+
+    function messageSeller(authorId) {
+      window.location.href = `chat.html?user=${authorId}`;
+    }
+
+    function logout() {
+      localStorage.clear();
+      sessionStorage.clear();
+      window.location.href = 'index.html';
+    }
+
+    function goToChat() {
+      window.location.href = 'chat-list.html';
+    }
+
+    const username = localStorage.getItem('username');
+    if (username) {
+      document.getElementById('headerUsername').textContent = `Welcome, ${username}`;
+    }
+
+    loadPosts();
+  </script>
+</body>
+</html>
